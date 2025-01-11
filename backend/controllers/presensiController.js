@@ -127,9 +127,29 @@ const getAllPresensi = async (req, res) => {
     }
 };
 
+const deletePresensi = async (req, res) => {
+    const { id } = req.params; // Mengambil ID dari parameter URL
+
+    try {
+        // Cari dan hapus data presensi berdasarkan ID
+        const presensi = await Presensi.findById(id);
+
+        if (!presensi) {
+            return res.status(404).json({ msg: 'Presensi tidak ditemukan' });
+        }
+
+        await presensi.remove(); // Menghapus data presensi dari database
+        res.status(200).json({ msg: 'Presensi berhasil dihapus' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+};
+
 module.exports = {
     checkIn,
     checkOut,
     getPresensiReport,
-    getAllPresensi, // Pastikan fungsi ini diekspor
+    getAllPresensi,
+    deletePresensi,
 };
