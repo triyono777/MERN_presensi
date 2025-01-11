@@ -3,7 +3,7 @@ const User = require('../models/User');
 const moment = require('moment');
 
 // Check-in pengguna
-exports.checkIn = async (req, res) => {
+const checkIn = async (req, res) => {
     const { location } = req.body;
     const userId = req.user; // Mendapatkan userId dari token JWT
 
@@ -32,7 +32,7 @@ exports.checkIn = async (req, res) => {
 };
 
 // Check-out pengguna
-exports.checkOut = async (req, res) => {
+const checkOut = async (req, res) => {
     const userId = req.user; // Mendapatkan userId dari token JWT
 
     try {
@@ -59,4 +59,77 @@ exports.checkOut = async (req, res) => {
         console.error(err.message);
         res.status(500).send('Server Error');
     }
+};
+
+// Fungsi untuk mendapatkan laporan presensi berdasarkan ID user dan rentang waktu
+const getPresensiReport = async (req, res) => {
+    const { userId, startDate, endDate } = req.query;
+
+    // Validasi tanggal
+    if (startDate && !moment(startDate, 'YYYY-MM-DD', true).isValid()) {
+        return res.status(400).json({ msg: 'Tanggal mulai tidak valid' });
+    }
+
+    if (endDate && !moment(endDate, 'YYYY-MM-DD', true).isValid()) {
+        return res.status(400).json({ msg: 'Tanggal akhir tidak valid' });
+    }
+
+    try {
+        // Membangun query untuk mengambil data presensi berdasarkan userId dan rentang tanggal
+        const query = {};
+
+        if (userId) {
+            query.userId = userId;
+        }
+
+        if (startDate && endDate) {
+            query.checkInTime = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate),
+            };
+        } else if (startDate) {
+            query.checkInTime = { $gte: new Date(startDate) };
+        } else if (endDate) {
+            query.checkInTime = { $lte: new Date(endDate) };
+        }
+
+        const presensiData = await Presensi.find(query).sort({ checkInTime: -1 });
+
+        if (!presensiData || presensiData.length === 0) {
+            return res.status(404).json({ msg: 'Tidak ada data presensi untuk rentang waktu ini' });
+        }
+
+        // Kembalikan data laporan
+        res.status(200).json(presensiData);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+};
+
+
+// Fungsi untuk mendapatkan seluruh data presensi
+const getAllPresensi = async (req, res) => {
+    try {
+        // Ambil semua data presensi dari database
+        const presensiList = await Presensi.find();
+
+        // Jika tidak ada data presensi
+        if (presensiList.length === 0) {
+            return res.status(404).json({ msg: 'No presensi data found' });
+        }
+
+        // Kirim data presensi ke client
+        return res.json(presensiList);
+    } catch (err) {
+        console.error(err.message);
+        return res.status(500).send('Server Error');
+    }
+};
+
+module.exports = {
+    checkIn,
+    checkOut,
+    getPresensiReport,
+    getAllPresensi, // Pastikan fungsi ini diekspor
 };
