@@ -1,32 +1,24 @@
-// Import package yang diperlukan
 const express = require('express');
-const cors = require('cors');
+const connectDB = require('./config/db');
 const dotenv = require('dotenv');
-const userRoutes = require('./routes/userRoutes');
-
-
-// Konfigurasi dotenv
-dotenv.config();
+const cors = require('cors');
 
 // Inisialisasi express
 const app = express();
 
+// Load variabel lingkungan
+dotenv.config();
+
+// Connect ke database MongoDB
+connectDB();
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Untuk parsing JSON
+app.use(cors()); // Untuk menangani CORS
 
+// Routes
+app.use('/api/users', require('./routes/userRoutes'));
 
-// Gunakan routes
-app.use('/api/users', userRoutes);
-// Route test sederhana
-app.get('/api/test', (req, res) => {
-    res.json({
-        message: 'API Aplikasi Presensi berjalan dengan baik'
-    });
-});
-
-// Jalankan server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server berjalan di port ${PORT}`);
-});
+// Mulai server
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
