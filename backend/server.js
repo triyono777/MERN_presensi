@@ -18,6 +18,7 @@ app.use(cors()); // Untuk menangani CORS
 
 // Routes
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/presensi', require('./routes/presensiRoutes')); // Tambahkan route presensi
 
 // Mulai server
 const PORT = process.env.PORT || 5001;
